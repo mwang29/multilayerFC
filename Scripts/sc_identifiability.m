@@ -26,7 +26,7 @@ configs.non_negative = false;
 %% load data
 
 connectivity_matrix = zeros(configs.numEdges, 420);
-cd('Connectivity_data')
+cd('../Connectivity_data')
 D = dir;
 col = 1;
 for k = 4:length(D)
@@ -43,8 +43,7 @@ for k = 4:length(D)
         cd('..')
     end
 end
-cd('..')
-
+cd('../Scripts')
 %% Distance matrix for each patient (n_edges x n_metrics x n_subjects)
 metrics = {'Da', 'Dr', 'Fa', 'Md', 'Mll', 'Mnf', 'Mw', 'OD', 'Po', 'Vic'};
 ut_mask = triu(true(configs.numDiffMetrics),1);
@@ -67,7 +66,7 @@ title('Average of SC metric distances across 42 subjects')
 set(gca,'xtick',[1:10],'xticklabel',metrics)
 set(gca,'ytick',[1:10],'yticklabel',metrics)
 colorbar
-saveas(fig, 'dist_mat_avg.png')
+saveas(fig, '../Images/dist_mat_avg.png')
 
 %% Pairwise identifiability for closely related metrics
 % pairs = [1, 4; 2, 4; 3, 10; 9, 10];
@@ -129,7 +128,7 @@ title('Max Identifiability across 42 subjects')
 set(gca,'xtick',[1:10],'xticklabel',metrics)
 set(gca,'ytick',[1:10],'yticklabel',metrics)
 colorbar
-saveas(fig, 'Images/dist_mat_avg.png')
+saveas(fig, '../Images/max_ident_mat.png')
 %% Shared edges in all 42 FCs
 metric = 'Dr';
 indices = find(ismember(metrics, metric)):10:configs.numFCs; %index of conn. matrix for given metric
