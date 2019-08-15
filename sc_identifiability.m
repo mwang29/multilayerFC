@@ -113,7 +113,7 @@ for i = 1:size(pairs,1)
         imagesc(Ident_mat_recon_opt); axis square; xlabel('Subjects Test');ylabel('Subjects Retest'); 
         title(sprintf('optimal reconstruction, Idiff = %0.2f',max(Idiff_recon))); colorbar; % caxis([0.2 1]);
         set(gca,'XTick',[],'YTick',[]);
-        saveas(fig, sprintf('1-6_binarized_%s.png', type{1}))
+        saveas(fig, sprintf('Images/1-6_binarized_%s.png', type{1}))
     end
 
 end
