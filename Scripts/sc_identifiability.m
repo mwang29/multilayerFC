@@ -49,10 +49,15 @@ metrics = {'Da', 'Dr', 'Fa', 'Md', 'Mll', 'Mnf', 'Mw', 'OD', 'Po', 'Vic'};
 ut_mask = triu(true(configs.numDiffMetrics),1);
 diag_mask = logical(eye(configs.numDiffMetrics));
 cols = 1:10:configs.numFCs;
+mnf_connectivity = connectivity_matrix(:,6:10:end);
+mask_mnf = sum(mnf_connectivity >0, 2) >= 35;
+connectivity_matrix = connectivity_matrix(mask_mnf,:);
+%%
 for subject = 1:configs.numSubjects
     range = cols(subject):cols(subject)+ 9;
-    subject_mat = zscore(connectivity_matrix(:,range));
-    dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'euclidean');
+    subject_mat = connectivity_matrix(:,range);
+%     dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'euclidean');
+    dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'spearman');
     subplot(6,7,subject)
     imagesc(dist_mat(:,:,subject))
     axis square
@@ -66,7 +71,7 @@ title('Average of SC metric distances across 42 subjects')
 set(gca,'xtick',[1:10],'xticklabel',metrics)
 set(gca,'ytick',[1:10],'yticklabel',metrics)
 colorbar
-saveas(fig, '../Images/dist_mat_avg.png')
+saveas(fig, '../Images/spearman_avg.png')
 
 %% Pairwise identifiability for closely related metrics
 % pairs = [1, 4; 2, 4; 3, 10; 9, 10];
