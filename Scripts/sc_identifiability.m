@@ -81,8 +81,9 @@ pairwise_mat = nan(configs.numEdges, configs.numSubjects * 2);
 test_index = 1:42;
 retest_index = 43:84;
 max_idiff_mat = nan(10);
-for metric_1 = 1:10
-    for metric_2 = 1:10
+% for metric_1 = 1:10
+%     for metric_2 = 1:10
+for 
         metric1_index = metric_1:10:configs.numFCs;
         metric2_index = metric_2:10:configs.numFCs;
         pairwise_mat = connectivity_matrix(:,[metric1_index, metric2_index]);
