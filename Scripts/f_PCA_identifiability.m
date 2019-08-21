@@ -28,6 +28,8 @@ elseif strcmp(configs.score,'hamming')
     Ident_mat_orig = pdist2(orig_matrix_test',orig_matrix_retest','hamming');
 elseif strcmp(configs.score,'jaccard')
     Ident_mat_orig = pdist2(orig_matrix_test',orig_matrix_retest','jaccard');
+elseif strcmp(configs.score,'spearman')
+    Ident_mat_orig = pdist2(orig_matrix_test',orig_matrix_retest','spearman');
 end
         
 %% Idiff computation, original FCs
@@ -74,6 +76,8 @@ for i = PCA_comps_range
         Ident_mat_recon = pdist2(recon_matrix_test',recon_matrix_retest','hamming');
     elseif strcmp(configs.score,'jaccard')
         Ident_mat_recon = pdist2(recon_matrix_test',recon_matrix_retest','jaccard');
+    elseif strcmp(configs.score,'spearman')
+        Ident_mat_recon = pdist2(recon_matrix_test',recon_matrix_retest','spearman');
     else        
         error('configs.score %s is not a valid method',configs.score)
     end
@@ -118,5 +122,7 @@ elseif strcmp(configs.score,'hamming')
     Ident_mat_recon_opt = pdist2(recon_matrix_opt_test',recon_matrix_opt_retest','hamming');
 elseif strcmp(configs.score,'jaccard')
     Ident_mat_recon_opt = pdist2(recon_matrix_opt_test',recon_matrix_opt_retest','jaccard');
+elseif strcmp(configs.score,'spearman')
+    Ident_mat_recon_opt = pdist2(recon_matrix_opt_test',recon_matrix_opt_retest','spearman');
 end
 
