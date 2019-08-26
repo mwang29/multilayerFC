@@ -57,13 +57,13 @@ connectivity_matrix = original_matrix(mask_mnf,:);
 for subject = 1:configs.numSubjects
     range = cols(subject):cols(subject)+ 9;
     subject_mat = connectivity_matrix(:,range);
-%     dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'euclidean');
-    dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'spearman');
+    dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'euclidean');
     subplot(6,7,subject)
     imagesc(dist_mat(:,:,subject))
     axis square
     colorbar
 end
+
 dist_mat_avg = squeeze(mean(dist_mat,3));
 fig = figure('units','normalized','outerposition',[0 0 1 1]);
 imagesc(dist_mat_avg)
@@ -72,7 +72,22 @@ title('Average of SC metric distances across 42 subjects')
 set(gca,'xtick',[1:10],'xticklabel',metrics)
 set(gca,'ytick',[1:10],'yticklabel',metrics)
 colorbar
-saveas(fig, '../Images/spearman_avg.png')
+saveas(fig, '../Images/frobenius_dist.png')
+%% Distance for each patient (42x42)
+
+metric = 6; %choose metric index (mnf) when comparing 42x42
+
+range = metric:10:420;
+metric_mat = connectivity_matrix(:,range);
+dist_mat_42x42 = pdist2(metric_mat',metric_mat', 'euclidean');
+similarity_matrix = ones(42,42) - dist_mat_42x42;
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
+imagesc(dist_mat_42x42)
+axis square
+title('Average of SC metric distances across 42 subjects')
+xlabel('Subject'), ylabel('Subject')
+colorbar
+saveas(fig, '../Images/distance_matrix_mnf_sub_by_sub.png')
 
 %% Pairwise identifiability for diffusion metrics
 metrics = {'Da', 'Dr', 'Fa', 'Md', 'Mll', 'Mnf', 'Mw', 'OD', 'Po', 'Vic'};

@@ -5,6 +5,20 @@ function [Idiff_orig,Ident_mat_orig,Idiff_recon,Idiff_opt,recon_matrix_opt,Ident
 orig_matrix_test = orig_matrix(:,Test_index);
 orig_matrix_retest = orig_matrix(:,Retest_index);
 
+%% Compute Distance/Similarity Matrix for pcacov
+dist_mat = pdist2(orig_matrix_test',orig_matrix_retest', 'euclidean');
+similarity_mat = ones(42,42) - dist_mat;
+
+%% Plot Distance/Similarity Matrix
+% fig = figure('units','normalized','outerposition',[0 0 1 1]);
+% imagesc(similarity_mat)
+% axis square
+% title('Similarity matrix (subject x subject) between metrics')
+% xlabel('Subject'), ylabel('Subject')
+% colorbar
+% saveas(fig, '../Images/similarity_between_metrics.png')
+
+%% Non-negative and binarization
 if configs.non_negative
     num_neg = nan(configs.max_numPCs-1);
 end
@@ -45,7 +59,7 @@ end
 Idiff_recon = zeros(1,configs.max_numPCs); %Initialization for Identifiability score for reconstructed connectivty data (indexed by number of components).
 PCA_comps_range = 1:configs.max_numPCs;
 disp('FC reconstruction with:')
-[COEFF, SCORE, latent] = pca(orig_matrix, 'NumComponents', configs.max_numPCs);  
+[COEFF, SCORE, latent] = pcacov(similarity_mat);  
 for i = PCA_comps_range
     recon_matrix = SCORE(:,1:i)*COEFF(:,1:i)'; % PCA reconstructed demeaned data    
     recon_matrix = bsxfun(@plus,recon_matrix,mean(orig_matrix)); % plug the mean back
