@@ -51,7 +51,7 @@ diag_mask = logical(eye(configs.numDiffMetrics));
 cols = 1:10:configs.numFCs;
 %Mask of edges that >35 subjects share
 mnf_connectivity = original_matrix(:,6:10:end);
-mask_mnf = sum(mnf_connectivity >0, 2) >= 42;
+mask_mnf = sum(mnf_connectivity >0, 2) >= 25;
 connectivity_matrix = original_matrix(mask_mnf,:);
 
 for subject = 1:configs.numSubjects
@@ -96,8 +96,8 @@ test_index = 1:42;
 retest_index = 43:84;
 max_idiff_mat = nan(10);
 
-for metric_1 = 1:10
-    for metric_2 = 1:10
+for metric_1 = 6
+    for metric_2 = 3
         metric1_index = metric_1:10:configs.numFCs;
         metric2_index = metric_2:10:configs.numFCs;
         pairwise_mat = connectivity_matrix(:,[metric1_index, metric2_index]);
@@ -108,36 +108,36 @@ for metric_1 = 1:10
             fprintf('Computing for metric %d and %d\n', metric_1, metric_2)
             [Idiff_orig,Ident_mat_orig,Idiff_recon,Idiff_opt,recon_matrix_opt,Ident_mat_recon_opt,PCA_comps_range,m_star, latent] = f_PCA_identifiability(pairwise_mat, test_index, retest_index, configs);
             max_idiff_mat(metric_1, metric_2) = max(Idiff_recon);
-            %r2 = cumsum(latent) ./ sum(latent);
+            r2 = cumsum(latent) ./ sum(latent);
             
-            % Plotting
-%             figure,
-%             plot(r2)
-%             fig = figure('units','normalized','outerposition',[0 0 1 1]); % Plot Figures
-%             %suptitle(['Opt Identifiability Recon at ' int2str(m_star) ' PCA comps'])
-%             subplot(1,3,1);
-%             imagesc(Ident_mat_orig);
-%             axis square; xlabel('subjects (Test)');ylabel('subjects (Retest)');
-%             title(sprintf('original data, Idiff = %0.2f',Idiff_orig)); colorbar; % caxis([0.2 1]);
-%             set(gca,'XTick',[],'YTick',[]);
-%             
-%             subplot(1,3,2);
-%             plot(PCA_comps_range,Idiff_orig*ones(length(PCA_comps_range),1),'--r','LineWidth',2); hold on;
-%             plot(PCA_comps_range,Idiff_recon,'-ob','LineWidth',2,'MarkerFaceColor','b','MarkerSize',8);
-%             plot(m_star,Idiff_opt,'-sk','LineWidth',2,'MarkerFaceColor','k','MarkerSize',12);
-%             
-%             xlabel('number of PCA components'); ylabel('Idiff (z-score)');
-%             axis square;
-%             legend({'original data','reconstruction','optimal reconstruction'},'Location','SouthEast');
-%             title(sprintf('%s | %s | %s', metrics{metric_1}, metrics{metric_2}, type{1}))
-%             
-%             sprintf('Maximal Identifiability (%0.2f) found at %d PCA comps',Idiff_opt,m_star)
-%             
-%             subplot(1,3,3);
-%             imagesc(Ident_mat_recon_opt); axis square; xlabel('Subjects Test');ylabel('Subjects Retest');
-%             title(sprintf('optimal reconstruction, Idiff = %0.2f',max(Idiff_recon))); colorbar; % caxis([0.2 1]);
-%             set(gca,'XTick',[],'YTick',[]);
-%             saveas(fig, sprintf('../Images/1-4_mask_%s.png', type{1}))
+            %Plotting
+            figure,
+            plot(r2)
+            fig = figure('units','normalized','outerposition',[0 0 1 1]); % Plot Figures
+            %suptitle(['Opt Identifiability Recon at ' int2str(m_star) ' PCA comps'])
+            subplot(1,3,1);
+            imagesc(Ident_mat_orig);
+            axis square; xlabel('subjects (Test)');ylabel('subjects (Retest)');
+            title(sprintf('original data, Idiff = %0.2f',Idiff_orig)); colorbar; % caxis([0.2 1]);
+            set(gca,'XTick',[],'YTick',[]);
+            
+            subplot(1,3,2);
+            plot(PCA_comps_range,Idiff_orig*ones(length(PCA_comps_range),1),'--r','LineWidth',2); hold on;
+            plot(PCA_comps_range,Idiff_recon,'-ob','LineWidth',2,'MarkerFaceColor','b','MarkerSize',8);
+            plot(m_star,Idiff_opt,'-sk','LineWidth',2,'MarkerFaceColor','k','MarkerSize',12);
+            
+            xlabel('number of PCA components'); ylabel('Idiff (z-score)');
+            axis square;
+            legend({'original data','reconstruction','optimal reconstruction'},'Location','SouthEast');
+            title(sprintf('%s | %s | %s', metrics{metric_1}, metrics{metric_2}, type{1}))
+            
+            sprintf('Maximal Identifiability (%0.2f) found at %d PCA comps',Idiff_opt,m_star)
+            
+            subplot(1,3,3);
+            imagesc(Ident_mat_recon_opt); axis square; xlabel('Subjects Test');ylabel('Subjects Retest');
+            title(sprintf('optimal reconstruction, Idiff = %0.2f',max(Idiff_recon))); colorbar; % caxis([0.2 1]);
+            set(gca,'XTick',[],'YTick',[]);
+            saveas(fig, sprintf('../Images/1-4_mask_%s.png', type{1}))
         end
         
     end

@@ -6,8 +6,8 @@ orig_matrix_test = orig_matrix(:,Test_index);
 orig_matrix_retest = orig_matrix(:,Retest_index);
 
 %% Compute Distance/Similarity Matrix for pcacov
-dist_mat = pdist2(orig_matrix_test',orig_matrix_retest', 'euclidean');
-similarity_mat = ones(42,42) - dist_mat;
+dist_mat = pdist2(orig_matrix',orig_matrix', 'spearman');
+similarity_mat = ones(84,84) - dist_mat;
 
 %% Plot Distance/Similarity Matrix
 % fig = figure('units','normalized','outerposition',[0 0 1 1]);
@@ -59,7 +59,9 @@ end
 Idiff_recon = zeros(1,configs.max_numPCs); %Initialization for Identifiability score for reconstructed connectivty data (indexed by number of components).
 PCA_comps_range = 1:configs.max_numPCs;
 disp('FC reconstruction with:')
-[COEFF, SCORE, latent] = pcacov(similarity_mat);  
+[COEFF, latent] = pcacov(similarity_mat);  
+SCORE = orig_matrix * COEFF;
+
 for i = PCA_comps_range
     recon_matrix = SCORE(:,1:i)*COEFF(:,1:i)'; % PCA reconstructed demeaned data    
     recon_matrix = bsxfun(@plus,recon_matrix,mean(orig_matrix)); % plug the mean back
