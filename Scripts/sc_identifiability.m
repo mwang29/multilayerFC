@@ -64,6 +64,7 @@ for subject = 1:configs.numSubjects
     axis square
     colorbar
 end
+
 dist_mat_avg = squeeze(mean(dist_mat,3));
 fig = figure('units','normalized','outerposition',[0 0 1 1]);
 imagesc(dist_mat_avg)
