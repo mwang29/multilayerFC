@@ -58,28 +58,38 @@ pairwise_mat = nan(configs.numEdges, configs.numSubjects * 2);
 test_index = 1:42;
 retest_index = 43:84;
 idiff_mat = nan(10, 10, 10);
-[metric_1, metric_2] = meshgrid(1:10, 1:10); %combinations of metrics
-metric_1 = metric_1(:);
-metric_2 = metric_2(:);
-for k = 1:length(metric_1) %Indexing throughout meshgrid (10 2) metrics
-    for mask_index = 1:10 %index for 10 different thresholds, 10% to 100%
-        threshold = mask_index*0.1;
+perms = nchoosek(1:10, 2);%permutations of metrics
+thresholds = 0.05:0.05:0.5; 
+
+for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
+    for thresh_index = 1:10 %index for 10 different thresholds, 10% to 100%
+        threshold = thresholds(thresh_index);
         to_keep = floor(threshold*configs.numEdges); %number of edges to keep
         mask_mnf = index(1:to_keep); %indices of kept edges
         connectivity_matrix = original_matrix(mask_mnf,:); %apply mask
-        metric1_index = metric_1(k):10:configs.numFCs;
-        metric2_index = metric_2(k):10:configs.numFCs;
+        metric1_index = perms(k,1):10:configs.numFCs;
+        metric2_index = perms(k,2):10:configs.numFCs;
         pairwise_mat = connectivity_matrix(:,[metric1_index, metric2_index]); %get metrics of interest
         
-        fprintf('Computing Idiff for metric %d and %d at threshold %.2f\n', metric_1(k), metric_2(k), threshold)
+        fprintf('Computing Idiff for metric %d and %d at threshold %.2f\n', perms(k,1), perms(k,2), threshold)
         metric_1_mat = pairwise_mat(:,test_index); %"test"
         metric_2_mat = pairwise_mat(:,retest_index); %"retest"
         Ident_mat = pdist2(metric_1_mat',metric_2_mat','spearman');
         mask_diag = logical(eye(size(Ident_mat)));
         Idiff = -mean((Ident_mat(mask_diag) - mean([mean(Ident_mat,2) mean(Ident_mat)'],2) ) ./ ((std(Ident_mat,0,2) + std(Ident_mat,0)')./2) ); %compute idiff
-        idiff_mat(metric_1(k), metric_2(k), mask_index) = Idiff;
+        idiff_mat(perms(k,1), perms(k,2), thresh_index) = Idiff;
     end
 end
+%% Plot idiff curves
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
+plot(thresholds, reshape(idiff_mat(1,6,:),10,1))
+hold on
+plot(thresholds, reshape(idiff_mat(1,4,:),10,1))
+plot(thresholds, reshape(idiff_mat(3,6,:),10,1))
+legend('Da-Mnf', 'Da-Md', 'Fa-Mnf', 'Location', 'southeast')
+title('Idiff thresholded based on group average')
+xlabel('Threshold')
+ylabel('Idiff')
 %% Plot 10x10 max I_diff
 fig = figure('units','normalized','outerposition',[0 0 1 1]);
 imagesc(idiff_mat)
