@@ -44,93 +44,45 @@ for k = 4:length(D)
     end
 end
 cd('../Scripts')
-%% Distance matrix for each patient (n_edges x n_metrics x n_subjects)
-metrics = {'Da', 'Dr', 'Fa', 'Md', 'Mll', 'Mnf', 'Mw', 'OD', 'Po', 'Vic'};
-ut_mask = triu(true(configs.numDiffMetrics),1);
-diag_mask = logical(eye(configs.numDiffMetrics));
-cols = 1:10:configs.numFCs;
-%Mask of edges that >35 subjects share
+
+
+%% Create mask using group avg across subjects
 mnf_connectivity = original_matrix(:,6:10:end);
-mask_mnf = sum(mnf_connectivity >0, 2) >= 42;
-connectivity_matrix = original_matrix(mask_mnf,:);
+group_avg = mean(mnf_connectivity,2);
+[sorted, index] = sort(group_avg,'descend');
 
-for subject = 1:configs.numSubjects
-    range = cols(subject):cols(subject)+ 9;
-    subject_mat = connectivity_matrix(:,range);
-%     dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'euclidean');
-    dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'spearman');
-    subplot(6,7,subject)
-    imagesc(dist_mat(:,:,subject))
-    axis square
-    colorbar
-end
-
-dist_mat_avg = squeeze(mean(dist_mat,3));
-fig = figure('units','normalized','outerposition',[0 0 1 1]);
-imagesc(dist_mat_avg)
-axis square
-title('Average of SC metric distances across 42 subjects')
-set(gca,'xtick',[1:10],'xticklabel',metrics)
-set(gca,'ytick',[1:10],'yticklabel',metrics)
-colorbar
-saveas(fig, '../Images/spearman_avg.png')
 
 %% Pairwise identifiability for diffusion metrics
 metrics = {'Da', 'Dr', 'Fa', 'Md', 'Mll', 'Mnf', 'Mw', 'OD', 'Po', 'Vic'};
 pairwise_mat = nan(configs.numEdges, configs.numSubjects * 2);
 test_index = 1:42;
 retest_index = 43:84;
-max_idiff_mat = nan(10);
-
-for metric_1 = 1:10
-    for metric_2 = 1:10
-        metric1_index = metric_1:10:configs.numFCs;
-        metric2_index = metric_2:10:configs.numFCs;
-        pairwise_mat = connectivity_matrix(:,[metric1_index, metric2_index]);
-        %pairwise_mat(pairwise_mat~=0) = 1; %binarize the matrix before ident
-        configs.binary = 0;
-        for type = {'spearman'}
-            configs.score = type{1};
-            fprintf('Computing for metric %d and %d\n', metric_1, metric_2)
-            [Idiff_orig,Ident_mat_orig,Idiff_recon,Idiff_opt,recon_matrix_opt,Ident_mat_recon_opt,PCA_comps_range,m_star, latent] = f_PCA_identifiability(pairwise_mat, test_index, retest_index, configs);
-            max_idiff_mat(metric_1, metric_2) = max(Idiff_recon);
-            %r2 = cumsum(latent) ./ sum(latent);
-            
-            % Plotting
-%             figure,
-%             plot(r2)
-%             fig = figure('units','normalized','outerposition',[0 0 1 1]); % Plot Figures
-%             %suptitle(['Opt Identifiability Recon at ' int2str(m_star) ' PCA comps'])
-%             subplot(1,3,1);
-%             imagesc(Ident_mat_orig);
-%             axis square; xlabel('subjects (Test)');ylabel('subjects (Retest)');
-%             title(sprintf('original data, Idiff = %0.2f',Idiff_orig)); colorbar; % caxis([0.2 1]);
-%             set(gca,'XTick',[],'YTick',[]);
-%             
-%             subplot(1,3,2);
-%             plot(PCA_comps_range,Idiff_orig*ones(length(PCA_comps_range),1),'--r','LineWidth',2); hold on;
-%             plot(PCA_comps_range,Idiff_recon,'-ob','LineWidth',2,'MarkerFaceColor','b','MarkerSize',8);
-%             plot(m_star,Idiff_opt,'-sk','LineWidth',2,'MarkerFaceColor','k','MarkerSize',12);
-%             
-%             xlabel('number of PCA components'); ylabel('Idiff (z-score)');
-%             axis square;
-%             legend({'original data','reconstruction','optimal reconstruction'},'Location','SouthEast');
-%             title(sprintf('%s | %s | %s', metrics{metric_1}, metrics{metric_2}, type{1}))
-%             
-%             sprintf('Maximal Identifiability (%0.2f) found at %d PCA comps',Idiff_opt,m_star)
-%             
-%             subplot(1,3,3);
-%             imagesc(Ident_mat_recon_opt); axis square; xlabel('Subjects Test');ylabel('Subjects Retest');
-%             title(sprintf('optimal reconstruction, Idiff = %0.2f',max(Idiff_recon))); colorbar; % caxis([0.2 1]);
-%             set(gca,'XTick',[],'YTick',[]);
-%             saveas(fig, sprintf('../Images/1-4_mask_%s.png', type{1}))
-        end
+idiff_mat = nan(10, 10, 10);
+[metric_1, metric_2] = meshgrid(1:10, 1:10); %combinations of metrics
+metric_1 = metric_1(:);
+metric_2 = metric_2(:);
+for k = 1:length(metric_1) %Indexing throughout meshgrid (10 2) metrics
+    for mask_index = 1:10 %index for 10 different thresholds, 10% to 100%
+        threshold = mask_index*0.1;
+        to_keep = floor(threshold*configs.numEdges); %number of edges to keep
+        mask_mnf = index(1:to_keep); %indices of kept edges
+        connectivity_matrix = original_matrix(mask_mnf,:); %apply mask
+        metric1_index = metric_1(k):10:configs.numFCs;
+        metric2_index = metric_2(k):10:configs.numFCs;
+        pairwise_mat = connectivity_matrix(:,[metric1_index, metric2_index]); %get metrics of interest
         
+        fprintf('Computing Idiff for metric %d and %d at threshold %.2f\n', metric_1(k), metric_2(k), threshold)
+        metric_1_mat = pairwise_mat(:,test_index); %"test"
+        metric_2_mat = pairwise_mat(:,retest_index); %"retest"
+        Ident_mat = pdist2(metric_1_mat',metric_2_mat','spearman');
+        mask_diag = logical(eye(size(Ident_mat)));
+        Idiff = -mean((Ident_mat(mask_diag) - mean([mean(Ident_mat,2) mean(Ident_mat)'],2) ) ./ ((std(Ident_mat,0,2) + std(Ident_mat,0)')./2) ); %compute idiff
+        idiff_mat(metric_1(k), metric_2(k), mask_index) = Idiff;
     end
 end
-%% 10x10 max I_diff
+%% Plot 10x10 max I_diff
 fig = figure('units','normalized','outerposition',[0 0 1 1]);
-imagesc(max_idiff_mat)
+imagesc(idiff_mat)
 axis square
 title('Max Identifiability across 42 subjects')
 set(gca,'xtick',1:10,'xticklabel',metrics)
