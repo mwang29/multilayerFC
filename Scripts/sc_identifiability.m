@@ -110,11 +110,15 @@ for place = 1:length(perms) %get indices based on decreasing idiff
     [index_iDiff(place,1), index_iDiff(place,2)] = find(idiff_slice == sorted_iDiff(place));
 end
 
+%% TODO: Calculate aggregate graph entropy (individual subject or all 42 subjects?)
+
+
+%% TODO: Combine layers based on hierachical clustering (max idiff)
+
 %% How many shared edges in all 42 FCs?
 metric = 'Dr';
 indices = find(ismember(metrics, metric)):10:configs.numFCs; %index of conn. matrix for given metric
 matching_edges = find(connectivity_matrix(:,indices(1)));
-
 
 for i = indices(2:end)
     next_edges = find(connectivity_matrix(:,i));
