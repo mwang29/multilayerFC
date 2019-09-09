@@ -67,7 +67,7 @@ for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
         threshold = thresholds(thresh_index);
         to_keep = floor(threshold*configs.numEdges); %number of edges to keep
         mask_mnf = index(1:to_keep); %indices of kept edges
-        connectivity_matrix = original_matrix(mask_mnf,:); %apply mask
+        connectivity_matrix = original_matrix(mask_mnf,:); %apply mask to orig matrix
         metric1_index = perms(k,1):10:configs.numFCs;
         metric2_index = perms(k,2):10:configs.numFCs;
         pairwise_mat = connectivity_matrix(:,[metric1_index, metric2_index]); %get metrics of interest
@@ -81,6 +81,7 @@ for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
         idiff_mat(perms(k,1), perms(k,2), thresh_index) = Idiff;
     end
 end
+
 %% Plot idiff curves
 fig = figure('units','normalized','outerposition',[0 0 1 1]);
 plot(thresholds, reshape(idiff_mat(1,6,:),10,1))
@@ -101,6 +102,15 @@ set(gca,'xtick',1:10,'xticklabel',metrics)
 set(gca,'ytick',1:10,'yticklabel',metrics)
 colorbar
 saveas(fig, '../Images/ident_mat_5pct_threshold.png')
+
+%% Hierarchical clustering by sorting pairs using idiff 
+idiff_slice = idiff_mat(:,:,1);
+[sorted_iDiff, index_iDiff] = sort(idiff_slice(:));
+%find pairs corresponding with idiff
+%idiff_slice(index_iDiff)
+%[row,col] = find(idiff_slice == sorted_iDiff)
+
+
 %% How many shared edges in all 42 FCs?
 metric = 'Dr';
 indices = find(ismember(metrics, metric)):10:configs.numFCs; %index of conn. matrix for given metric
