@@ -46,7 +46,7 @@ end
 cd('../Scripts')
 
 
-%% Create mask using group avg across subjects
+%% Sorted list of MnF group avg edges across subjects
 mnf_connectivity = original_matrix(:,6:10:end);
 group_avg = mean(mnf_connectivity,2);
 [sorted, index] = sort(group_avg,'descend');
@@ -60,6 +60,7 @@ retest_index = 43:84;
 idiff_mat = nan(10, 10, 10);
 perms = nchoosek(1:10, 2);%permutations of metrics
 thresholds = 0.05:0.05:0.5; 
+
 
 for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
     for thresh_index = 1:10 %index for 10 different thresholds, 10% to 100%
@@ -90,16 +91,16 @@ legend('Da-Mnf', 'Da-Md', 'Fa-Mnf', 'Location', 'southeast')
 title('Idiff thresholded based on group average')
 xlabel('Threshold')
 ylabel('Idiff')
-saveas(fig, '../Images/group_avg_threhsold.png')
+saveas(fig, '../Images/group_avg_threshold.png')
 %% Plot 10x10 max I_diff
 fig = figure('units','normalized','outerposition',[0 0 1 1]);
-imagesc(idiff_mat)
+imagesc(idiff_mat(:,:,1))
 axis square
 title('Max Identifiability across 42 subjects')
 set(gca,'xtick',1:10,'xticklabel',metrics)
 set(gca,'ytick',1:10,'yticklabel',metrics)
 colorbar
-saveas(fig, '../Images/max_ident_mat_spearman.png')
+saveas(fig, '../Images/ident_mat_5pct_threshold.png')
 %% How many shared edges in all 42 FCs?
 metric = 'Dr';
 indices = find(ismember(metrics, metric)):10:configs.numFCs; %index of conn. matrix for given metric
