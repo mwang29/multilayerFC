@@ -104,12 +104,11 @@ colorbar
 saveas(fig, '../Images/ident_mat_5pct_threshold.png')
 
 %% Hierarchical clustering by sorting pairs using idiff 
-idiff_slice = idiff_mat(:,:,1);
-[sorted_iDiff, index_iDiff] = sort(idiff_slice(:));
-%find pairs corresponding with idiff
-%idiff_slice(index_iDiff)
-%[row,col] = find(idiff_slice == sorted_iDiff)
-
+idiff_slice = idiff_mat(:,:,1); %slice at defined threshold
+sorted_iDiff = sort(idiff_slice(:)); %sort idiff at slice
+for place = 1:length(perms) %get indices based on decreasing idiff
+    [index_iDiff(place,1), index_iDiff(place,2)] = find(idiff_slice == sorted_iDiff(place));
+end
 
 %% How many shared edges in all 42 FCs?
 metric = 'Dr';
