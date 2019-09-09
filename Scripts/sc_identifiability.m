@@ -90,6 +90,7 @@ legend('Da-Mnf', 'Da-Md', 'Fa-Mnf', 'Location', 'southeast')
 title('Idiff thresholded based on group average')
 xlabel('Threshold')
 ylabel('Idiff')
+saveas(fig, '../Images/group_avg_threhsold.png')
 %% Plot 10x10 max I_diff
 fig = figure('units','normalized','outerposition',[0 0 1 1]);
 imagesc(idiff_mat)
