@@ -45,6 +45,33 @@ for k = 4:length(D)
 end
 cd('../Scripts')
 
+%% Distance matrix for each patient (n_edges x n_metrics x n_subjects)
+metrics = {'Da', 'Dr', 'Fa', 'Md', 'Mll', 'Mnf', 'Mw', 'OD', 'Po', 'Vic'};
+ut_mask = triu(true(configs.numDiffMetrics),1);
+diag_mask = logical(eye(configs.numDiffMetrics));
+cols = 1:10:configs.numFCs;
+%Mask of edges that >35 subjects share
+mnf_connectivity = original_matrix(:,6:10:end);
+mask_mnf = sum(mnf_connectivity >0, 2) >= 42;
+connectivity_matrix = original_matrix(mask_mnf,:);
+corr_mat = NaN(10,10,42);
+
+for subject = 1:configs.numSubjects
+    range = cols(subject):cols(subject)+ 9;
+    subject_mat = connectivity_matrix(:,range);
+    dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'spearman');
+    corr_mat(:,:,subject) = corr(subject_mat,subject_mat);
+end
+
+corr_mat_avg = squeeze(mean(corr_mat,3));
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
+imagesc(corr_mat_avg)
+axis square
+title('Average of SC metric correlation across 42 subjects')
+set(gca,'xtick',[1:10],'xticklabel',metrics)
+set(gca,'ytick',[1:10],'yticklabel',metrics)
+colorbar
+saveas(fig, '../Images/corr_avg.png')
 
 %% Sorted list of MnF group avg edges across subjects
 mnf_connectivity = original_matrix(:,6:10:end);
