@@ -59,7 +59,7 @@ corr_mat = NaN(10,10,42);
 for subject = 1:configs.numSubjects
     range = cols(subject):cols(subject)+ 9;
     subject_mat = connectivity_matrix(:,range);
-    dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'spearman');
+    % dist_mat(:,:,subject) = pdist2(subject_mat',subject_mat', 'spearman');
     corr_mat(:,:,subject) = corr(subject_mat,subject_mat);
 end
 
@@ -72,6 +72,7 @@ set(gca,'xtick',[1:10],'xticklabel',metrics)
 set(gca,'ytick',[1:10],'yticklabel',metrics)
 colorbar
 saveas(fig, '../Images/corr_avg.png')
+%saveas(fig, '../Images/spearman_avg.png')
 
 %% Sorted list of MnF group avg edges across subjects
 mnf_connectivity = original_matrix(:,6:10:end);
@@ -86,7 +87,7 @@ test_index = 1:42;
 retest_index = 43:84;
 idiff_mat = nan(10, 10, 10);
 perms = nchoosek(1:10, 2);%permutations of metrics
-thresholds = 0.05:0.05:0.5; 
+thresholds = 0.01:.01:0.1; 
 
 
 for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
@@ -128,7 +129,7 @@ title('Max Identifiability across 42 subjects')
 set(gca,'xtick',1:10,'xticklabel',metrics)
 set(gca,'ytick',1:10,'yticklabel',metrics)
 colorbar
-saveas(fig, '../Images/ident_mat_5pct_threshold.png')
+saveas(fig, '../Images/ident_mat_1pct_threshold.png')
 
 %% Hierarchical clustering by sorting pairs using idiff 
 idiff_slice = idiff_mat(:,:,1);
@@ -155,8 +156,34 @@ fprintf('Total matching edges across all %d subjects for %s: %d\n', configs.numS
 fprintf('%.2f%% of edges are common across subjects\n', 100*length(matching_edges)/avg_num_edges)
 
 
+%% Subject-level identifiability between metrics
+metrics = {'Da', 'Dr', 'Fa', 'Md', 'Mll', 'Mnf', 'Mw', 'OD', 'Po', 'Vic'};
+distance_mat = nan(10, 10, configs.numSubjects);
+perms = nchoosek(1:10, 2);%permutations of metrics
 
+for subject = 1:configs.numSubjects
+    fprintf('Subject %d\n', subject)
+    range = cols(subject):cols(subject)+ 9;
+    subject_mat = original_matrix(:,range);
+    for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
+        metric1_index = perms(k,1);
+        metric2_index = perms(k,2);
+        metric_1_mat = subject_mat(:,metric1_index); %"test"
+        metric_2_mat = subject_mat(:,metric2_index); %"retest"
+        distance = pdist2(metric_1_mat',metric_2_mat','spearman');
+        distance_mat(perms(k,1), perms(k,2), subject) = distance;
+    end
+end
 
+distance_mat_avg = squeeze(mean(distance_mat,3));
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
+imagesc(distance_mat_avg)
+axis square
+title('Average of distance (spearman) across 42 subjects for 10 metrics')
+set(gca,'xtick',[1:10],'xticklabel',metrics)
+set(gca,'ytick',[1:10],'yticklabel',metrics)
+colorbar
+saveas(fig, '../Images/subject_level_distance.png')
 
 
 
