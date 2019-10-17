@@ -124,10 +124,10 @@ for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
         fprintf('Computing Idiff for metric %d and %d at threshold %.2f\n', perms(k,1), perms(k,2), threshold)
         metric_1_mat = pairwise_mat(:,test_index); %"test"
         metric_2_mat = pairwise_mat(:,retest_index); %"retest"
-        Ident_mat = pdist2(metric_1_mat',metric_2_mat','correlation');
+        Ident_mat = pdist2(metric_1_mat',metric_2_mat','jaccard');
         mask_diag = logical(eye(size(Ident_mat)));
-        Idiff = -mean(Ident_mat(mask_diag)) + mean(Ident_mat(~mask_diag));
-%       Idiff = -mean((Ident_mat(mask_diag) - mean([mean(Ident_mat,2) mean(Ident_mat)'],2) ) ./ ((std(Ident_mat,0,2) + std(Ident_mat,0)')./2) ); %compute idiff
+ %       Idiff = -mean(Ident_mat(mask_diag)) + mean(Ident_mat(~mask_diag));
+        Idiff = -mean((Ident_mat(mask_diag) - mean([mean(Ident_mat,2) mean(Ident_mat)'],2) ) ./ ((std(Ident_mat,0,2) + std(Ident_mat,0)')./2) ); %compute idiff
         idiff_mat(perms(k,1), perms(k,2), thresh_index) = Idiff;
 
     end
@@ -136,12 +136,11 @@ end
 %% Plotting
 fig = imagesc(idiff_mat(:,:,1));
 axis square
-title('Identifiability across 42 subjects, all edges, pearson corr')
+title('Identifiability across 42 subjects, all edges, jaccard, z-score')
 set(gca,'xtick',1:10,'xticklabel',metrics)
 set(gca,'ytick',1:10,'yticklabel',metrics)
 colorbar
-saveas(fig, '../Images/ident_mat_100pct_communicability_corr.fig')
-
+saveas(fig, '../Figures/ident_mat_100pct_communicability_jaccard_z.fig')
 
 
 
