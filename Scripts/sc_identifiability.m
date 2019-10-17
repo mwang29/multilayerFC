@@ -87,11 +87,11 @@ test_index = 1:42;
 retest_index = 43:84;
 idiff_mat = nan(10, 10, 10);
 perms = nchoosek(1:10, 2);%permutations of metrics
-thresholds = 0.01:.01:0.1; 
+thresholds = 1; 
 
 
 for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
-    for thresh_index = 1:10 %index for 10 different thresholds, 10% to 100%
+    for thresh_index = 1 %index for 10 different thresholds, 10% to 100%
         threshold = thresholds(thresh_index);
         to_keep = floor(threshold*configs.numEdges); %number of edges to keep
         mask_mnf = index(1:to_keep); %indices of kept edges
@@ -103,9 +103,10 @@ for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
         fprintf('Computing Idiff for metric %d and %d at threshold %.2f\n', perms(k,1), perms(k,2), threshold)
         metric_1_mat = pairwise_mat(:,test_index); %"test"
         metric_2_mat = pairwise_mat(:,retest_index); %"retest"
-        Ident_mat = pdist2(metric_1_mat',metric_2_mat','spearman');
+        Ident_mat = pdist2(metric_1_mat',metric_2_mat','correlation');
         mask_diag = logical(eye(size(Ident_mat)));
-        Idiff = -mean((Ident_mat(mask_diag) - mean([mean(Ident_mat,2) mean(Ident_mat)'],2) ) ./ ((std(Ident_mat,0,2) + std(Ident_mat,0)')./2) ); %compute idiff
+        Idiff = -mean(Ident_mat(mask_diag)) + mean(Ident_mat(~mask_diag));
+        %Idiff = -mean((Ident_mat(mask_diag) - mean([mean(Ident_mat,2) mean(Ident_mat)'],2) ) ./ ((std(Ident_mat,0,2) + std(Ident_mat,0)')./2) ); %compute idiff
         idiff_mat(perms(k,1), perms(k,2), thresh_index) = Idiff;
     end
 end
@@ -129,14 +130,9 @@ title('Max Identifiability across 42 subjects')
 set(gca,'xtick',1:10,'xticklabel',metrics)
 set(gca,'ytick',1:10,'yticklabel',metrics)
 colorbar
-saveas(fig, '../Images/ident_mat_1pct_threshold.png')
+saveas(fig, '../Images/ident_mat_100pct_diffusion_corr.fig')
 
-%% Hierarchical clustering by sorting pairs using idiff 
-idiff_slice = idiff_mat(:,:,1);
-[sorted_iDiff, index_iDiff] = sort(idiff_slice(:));
-%find pairs corresponding with idiff
-%idiff_slice(index_iDiff)
-%[row,col] = find(idiff_slice == sorted_iDiff)
+
 
 
 %% How many shared edges in all 42 FCs?
@@ -165,13 +161,13 @@ for subject = 1:configs.numSubjects
     fprintf('Subject %d\n', subject)
     range = cols(subject):cols(subject)+ 9;
     subject_mat = original_matrix(:,range);
-    for k = 1:length(perms) %Indexing throughout meshgrid (10 2) metrics
-        metric1_index = perms(k,1);
-        metric2_index = perms(k,2);
-        metric_1_mat = subject_mat(:,metric1_index); %"test"
-        metric_2_mat = subject_mat(:,metric2_index); %"retest"
-        distance = pdist2(metric_1_mat',metric_2_mat','spearman');
-        distance_mat(perms(k,1), perms(k,2), subject) = distance;
+    for j = 1:10 
+        for k = 1:10
+            metric_1_mat = subject_mat(:,j); %"test"
+            metric_2_mat = subject_mat(:,k); %"retest"
+            distance = pdist2(metric_1_mat',metric_2_mat','spearman');
+            distance_mat(j, k, subject) = distance;
+        end
     end
 end
 
@@ -185,6 +181,10 @@ set(gca,'ytick',[1:10],'yticklabel',metrics)
 colorbar
 saveas(fig, '../Images/subject_level_distance.png')
 
-
+%% Hierarchical clustering by sorting pairs using idiff 
+[sorted_dist, index_dist] = sort(distance_mat_avg(:));
+%find pairs corresponding with idiff
+%distance_mat_avg(index_dist)
+%[row,col] = find(distance_mat_avg == sorted_dist);
 
 
